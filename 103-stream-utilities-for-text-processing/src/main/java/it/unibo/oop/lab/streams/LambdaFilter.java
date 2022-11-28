@@ -6,6 +6,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.Toolkit;
+import java.util.Arrays;
 import java.util.function.Function;
 
 import javax.swing.BorderFactory;
@@ -38,7 +39,32 @@ public final class LambdaFilter extends JFrame {
         /**
          * Commands.
          */
-        IDENTITY("No modifications", Function.identity());
+        IDENTITY("No modifications", Function.identity()),
+        TOLOWERCASE("To lowercase", s -> {
+            return s.toLowerCase();
+        }),
+        COUNTCHARS("Count the number of chars", s -> {
+            return Integer.toString(s.length());
+        }),
+        COUNTLINES("Count the number of lines", s -> {
+            return Long.toString(s.lines().count());
+        }),
+        LIST("List in alphabetical order", s -> {
+            return Arrays.stream(s.replaceAll("\r", "").replaceAll("\n", " ").split(" "))
+                .sorted((s1, s2) -> s1.compareTo(s2))
+                .reduce((s1, s2) -> s1.concat("\r\n" + s2))
+                .get();
+        }),
+        COUNTEACH("Write the count for each word", s -> {
+            return Arrays.stream(s.replaceAll("\r", "").replaceAll("\n", " ").split(" "))                
+                .map(t -> t + " -> " + Arrays.stream(s.replaceAll("\r", "").replaceAll("\n", " ").split(" "))
+                                        .filter(k -> k.equals(t))
+                                        .count())
+                .distinct()
+                .reduce((s1, s2) -> s1.concat("\r\n" + s2))
+                .get();
+        });
+        
 
         private final String commandName;
         private final Function<String, String> fun;
