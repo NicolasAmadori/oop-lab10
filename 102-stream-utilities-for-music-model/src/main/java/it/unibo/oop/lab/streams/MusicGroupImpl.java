@@ -31,42 +31,68 @@ public final class MusicGroupImpl implements MusicGroup {
 
     @Override
     public Stream<String> orderedSongNames() {
-        return null;
+        return songs.stream()
+                .map(s -> s.getSongName())
+                .sorted();
     }
 
     @Override
     public Stream<String> albumNames() {
-        return null;
+        return albums.keySet().stream();
     }
 
     @Override
     public Stream<String> albumInYear(final int year) {
-        return null;
+        return albums.keySet().stream()
+                .filter(name -> albums.get(name).equals(year));
     }
 
     @Override
     public int countSongs(final String albumName) {
-        return -1;
+        return (int) songs.stream()
+                        .filter(s -> s.getAlbumName().isPresent())
+                        .filter(s -> s.getAlbumName().get().equals(albumName))
+                        .count();
     }
 
     @Override
     public int countSongsInNoAlbum() {
-        return -1;
+        return (int) songs.stream()
+                        .filter(s -> !s.getAlbumName().isPresent())
+                        .count();
     }
 
     @Override
     public OptionalDouble averageDurationOfSongs(final String albumName) {
-        return null;
+        return OptionalDouble.of(
+                songs.stream()
+                .filter(s -> s.getAlbumName().isPresent())
+                .filter(s -> s.getAlbumName().get().equals(albumName))
+                .map(s -> s.getDuration())
+                .reduce((a,b) -> a + b)
+                .get() / this.countSongs(albumName));
     }
 
     @Override
     public Optional<String> longestSong() {
-        return null;
+        return Optional.of(
+            songs.stream()
+                .max((s1,s2) -> Double.compare(s1.getDuration(), s2.getDuration()))
+                .get().getSongName()
+        );
+    }
+
+    public Double getAlbumLength(final String albumName) {
+        return this.averageDurationOfSongs(albumName).getAsDouble() * this.countSongs(albumName);
     }
 
     @Override
     public Optional<String> longestAlbum() {
-        return null;
+        return Optional.of(
+            albums.keySet().stream()
+                .max((n1, n2) -> Double.compare( getAlbumLength(n1), getAlbumLength(n2)))
+                .get()
+        );
     }
 
     private static final class Song {
