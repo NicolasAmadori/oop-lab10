@@ -60,9 +60,7 @@ public final class LambdaUtilities {
      */
     public static <T> List<Optional<T>> optFilter(final List<T> list, final Predicate<T> pre) {
         final List<Optional<T>> l = new ArrayList<>();        
-        list.forEach(t -> {
-            l.add(Optional.of(t).filter(pre));
-        });
+        list.forEach(t -> l.add(Optional.ofNullable(t).filter(pre)));
         return l;
     }
 
@@ -80,12 +78,12 @@ public final class LambdaUtilities {
      */
     public static <R, T> Map<R, Set<T>> group(final List<T> list, final Function<T, R> op) {
         final Map<R, Set<T>> m = new HashMap<>();
-        list.forEach(t -> {
-            final R key = op.apply(t);
-            Set<T> s = m.get(key) == null ? new HashSet<>() : m.get(key);            
-            s.add(t);
-            m.put(key, s);
-        });
+        list.forEach(t -> m.merge(op.apply(t), Set.of(t), (s1, s2) -> {
+            final Set<T> newSet = new HashSet<>();
+            newSet.addAll(s1);
+            newSet.addAll(s2);
+            return newSet;
+        }));
         return m;
     }
 
@@ -102,15 +100,8 @@ public final class LambdaUtilities {
      *         by the supplier
      */
     public static <K, V> Map<K, V> fill(final Map<K, Optional<V>> map, final Supplier<V> def) {
-        /*
-         * Suggestion: consider Optional.orElse
-         *
-         * Keep in mind that a map can be iterated through its forEach method
-         */
         final Map<K, V> m = new HashMap<>();
-        map.forEach((k, val) -> {
-            m.put(k, val.orElse(def.get()));
-        });
+        map.forEach((k, val) -> m.put(k, val.orElseGet(def)));
         return m;
     }
 
